@@ -11,7 +11,7 @@ Splashy is a comprehensive automated water gun turret system with computer visio
 - **🔧 Always-On Service**: Systemd integration for automatic startup and monitoring
 - **📱 Mobile Friendly**: Responsive web interface works on phones and tablets
 - **🛡️ Safety Features**: Emergency stops, cooldown periods, and security restrictions
-- **📹 HD Camera Support**: 720p/1080p resolution with optimized performance
+- **📹 Ultra HD Camera**: Up to 4608x2592 (12MP) maximum resolution support
 
 ## 🔧 Hardware Requirements
 
@@ -43,6 +43,8 @@ Splashy is a comprehensive automated water gun turret system with computer visio
 
 ```
 splashy/
+├── tracker.py               # 🚀 Ultra HD face tracker (main application)
+├── final_tracker.py         # Alternative advanced tracker
 ├── core/                    # Core system files
 │   ├── splashy_system.py    # Main system controller
 │   ├── servo_controller.py  # Servo control logic
@@ -50,11 +52,7 @@ splashy/
 │   └── emergency_stop.py    # Safety systems
 ├── tests/                   # Testing and calibration
 │   ├── camera_test.py       # Basic camera test
-│   ├── live_camera_test.py  # Live video with detection
-│   ├── quick_camera_test.py # 10-second camera test
-│   ├── color_detection_test.py # Green object detection
-│   ├── improved_camera.py   # Performance testing
-│   └── opencv_camera_test.py # OpenCV backend testing
+│   └── improved_camera.py   # High-performance streaming
 ├── web/                     # Web interface
 │   ├── web_interface.py     # Flask web server
 │   ├── web_camera_viewer.py # Camera streaming
@@ -139,7 +137,10 @@ python3 web/web_interface.py
 
 ### Main System
 ```bash
-# Run main splashy system
+# Run ultra HD face tracker (recommended)
+python3 tracker.py
+
+# Or run main splashy system
 python3 core/splashy_system.py
 ```
 
