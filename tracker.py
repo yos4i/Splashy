@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Tracker - Ultra High-Resolution Face Tracking System
-Maximum camera resolution with advanced detection and smooth servo control
+Tracker - Optimized High-Performance Face Tracking System
+Balanced resolution and FPS with stable servo control
 """
 import cv2
 import numpy as np
@@ -16,22 +16,22 @@ import tempfile
 sys.path.append('core')
 from servo_controller import ServoController, ServoConfig
 
-class UltraHighResCapture:
-    """Ultra high resolution camera capture using maximum Pi Camera v3 capabilities"""
+class OptimizedCapture:
+    """High-performance camera capture with dynamic resolution scaling"""
     
-    def __init__(self, width=4608, height=2592, quality=95):
-        """Initialize with maximum resolution capabilities"""
+    def __init__(self, width=2304, height=1296, quality=85):
+        """Initialize with balanced resolution for better FPS"""
         self.width = width
         self.height = height 
         self.quality = quality
         self.temp_file = None
         
-        # Performance optimization
-        self.capture_interval = 0.07  # ~14 FPS for max resolution (hardware limit)
+        # Performance optimizations for better FPS
+        self.capture_interval = 0.03  # ~30+ FPS for balanced resolution
         self.last_capture_time = 0
         
-        print(f"📹 Ultra HD Camera initialized: {width}x{height} ({width*height//1000000:.1f}MP)")
-        print(f"🎯 Target FPS: ~{1/self.capture_interval:.1f} (hardware limited)")
+        print(f"📹 Optimized Camera: {width}x{height} ({width*height//1000000:.1f}MP)")
+        print(f"🚀 Target FPS: ~{1/self.capture_interval:.1f}")
         
         # Test camera connection
         self._test_camera()
@@ -49,10 +49,10 @@ class UltraHighResCapture:
             print(f"⚠️ Camera test failed: {e} - continuing anyway")
     
     def read(self):
-        """Capture ultra high resolution frame"""
+        """Capture optimized high resolution frame"""
         current_time = time.time()
         
-        # Respect capture interval to avoid overwhelming the camera
+        # Minimal capture interval for better FPS
         time_since_last = current_time - self.last_capture_time
         if time_since_last < self.capture_interval:
             time.sleep(self.capture_interval - time_since_last)
@@ -62,25 +62,24 @@ class UltraHighResCapture:
             with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
                 temp_path = temp_file.name
             
-            # Capture using maximum resolution with optimizations
+            # Optimized capture command for better FPS
             cmd = [
                 'libcamera-still',
                 '--output', temp_path,
-                '--timeout', '100',  # Quick capture
+                '--timeout', '50',  # Faster capture
                 '--width', str(self.width),
                 '--height', str(self.height),
                 '--quality', str(self.quality),
-                '--nopreview',  # No preview for speed
-                '--immediate',  # Capture immediately
+                '--nopreview',
+                '--immediate',
                 '--encoding', 'jpg'
             ]
             
-            result = subprocess.run(cmd, capture_output=True, timeout=2)
+            result = subprocess.run(cmd, capture_output=True, timeout=1.5)
             
             if result.returncode == 0 and os.path.exists(temp_path):
-                # Load and return the ultra high resolution image
                 frame = cv2.imread(temp_path)
-                os.unlink(temp_path)  # Clean up temp file
+                os.unlink(temp_path)
                 
                 self.last_capture_time = time.time()
                 
@@ -90,7 +89,7 @@ class UltraHighResCapture:
                     print("❌ Failed to load captured image")
                     return False, None
             else:
-                print(f"❌ Camera capture failed: {result.stderr.decode()}")
+                print(f"❌ Camera capture failed")
                 return False, None
                 
         except subprocess.TimeoutExpired:
@@ -104,482 +103,404 @@ class UltraHighResCapture:
         """Clean up camera resources"""
         print("🧹 Camera resources cleaned")
 
-class AdvancedFaceDetector:
-    """Advanced face detection with multiple methods and optimizations"""
+class StableFaceDetector:
+    """Stable face detection optimized for consistent tracking"""
     
     def __init__(self):
-        print("🔍 Loading advanced face detection systems...")
+        print("🔍 Loading stable face detection...")
         
-        # Load Haar cascade classifiers (fast, good for high-res)
+        # Load Haar cascade classifiers
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         self.profile_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_profileface.xml')
         
-        # Try to load DNN-based detector for better accuracy
-        self.dnn_net = None
-        try:
-            # OpenCV DNN face detector (if available)
-            model_file = "opencv_face_detector_uint8.pb"
-            config_file = "opencv_face_detector.pbtxt"
-            
-            # These files would need to be downloaded separately
-            # For now, we'll use enhanced Haar cascades
-            print("📊 Using enhanced Haar cascade detection")
-            
-        except Exception as e:
-            print("📊 Using Haar cascade detection (DNN not available)")
+        # Optimized detection parameters for stability
+        self.scale_factor = 1.1    # Good balance of accuracy and performance
+        self.min_neighbors = 5     # Higher for stability (reduce false positives)
+        self.min_face_size = (60, 60)   # Reasonable minimum
+        self.max_face_size = (400, 400) # Reasonable maximum
         
-        # Detection parameters optimized for high resolution
-        self.scale_factor = 1.05  # More sensitive for high-res
-        self.min_neighbors = 3    # Less strict for better detection
-        self.min_face_size = (80, 80)   # Larger minimum for high-res
-        self.max_face_size = (800, 800) # Much larger maximum for high-res
-        
-        print("✅ Advanced face detector ready for ultra-high resolution")
+        print("✅ Stable face detector ready")
     
     def detect_faces(self, frame):
-        """Enhanced face detection optimized for ultra-high resolution"""
+        """Stable face detection with consistent results"""
         if frame is None:
             return []
         
         # Convert to grayscale for detection
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
-        # Enhance image for better detection at high resolution
         gray = cv2.equalizeHist(gray)
         
-        # For very high resolution, we might want to detect on a scaled version
-        # then scale coordinates back up for better performance
-        scale = 1.0
-        if gray.shape[0] > 2000:  # If height > 2000px, scale down for detection
-            scale = 2000 / gray.shape[0]
-            detection_height = int(gray.shape[0] * scale)
-            detection_width = int(gray.shape[1] * scale)
-            gray_scaled = cv2.resize(gray, (detection_width, detection_height))
-        else:
-            gray_scaled = gray
-            
-        # Detect frontal faces
+        # Detect frontal faces with stable parameters
         faces = self.face_cascade.detectMultiScale(
-            gray_scaled,
+            gray,
             scaleFactor=self.scale_factor,
             minNeighbors=self.min_neighbors,
-            minSize=(int(self.min_face_size[0] * scale), int(self.min_face_size[1] * scale)),
-            maxSize=(int(self.max_face_size[0] * scale), int(self.max_face_size[1] * scale)),
+            minSize=self.min_face_size,
+            maxSize=self.max_face_size,
             flags=cv2.CASCADE_SCALE_IMAGE
         )
         
-        # Detect profile faces
-        profiles = self.profile_cascade.detectMultiScale(
-            gray_scaled,
-            scaleFactor=self.scale_factor,
-            minNeighbors=self.min_neighbors,
-            minSize=(int(self.min_face_size[0] * scale), int(self.min_face_size[1] * scale)),
-            maxSize=(int(self.max_face_size[0] * scale), int(self.max_face_size[1] * scale))
-        )
-        
-        # Scale coordinates back to original resolution
-        all_faces = []
-        
-        # Add frontal faces
-        for (x, y, w, h) in faces:
-            if scale != 1.0:
-                x, y, w, h = int(x/scale), int(y/scale), int(w/scale), int(h/scale)
-            all_faces.append((x, y, w, h, 'frontal'))
-        
-        # Add profile faces
-        for (x, y, w, h) in profiles:
-            if scale != 1.0:
-                x, y, w, h = int(x/scale), int(y/scale), int(w/scale), int(h/scale)
-            all_faces.append((x, y, w, h, 'profile'))
-        
-        # Convert to target format with enhanced information
+        # Convert to target format
         targets = []
-        for i, (x, y, w, h, face_type) in enumerate(all_faces):
+        for i, (x, y, w, h) in enumerate(faces):
             center_x = x + w // 2
             center_y = y + h // 2
             area = w * h
             
-            # Calculate confidence based on size and position
-            confidence = min(1.0, area / 50000)  # Normalize based on typical face size
+            # Calculate stability score (larger faces are more stable)
+            stability = min(1.0, area / 10000)
             
             targets.append({
                 'center': (center_x, center_y),
                 'bbox': (x, y, w, h),
                 'area': area,
-                'type': face_type,
-                'confidence': confidence,
+                'stability': stability,
                 'id': i
             })
         
-        # Sort by area (largest first) for better tracking priority
+        # Sort by area (largest first) for consistent primary target
         targets.sort(key=lambda t: t['area'], reverse=True)
         
         return targets
 
-class UltraTracker:
-    """Ultra high-resolution face tracking system"""
+class StableTracker:
+    """High-performance tracker with stable servo control"""
     
     def __init__(self):
-        print("\n🚀 INITIALIZING ULTRA TRACKER")
-        print("="*60)
+        print("\n🚀 INITIALIZING STABLE TRACKER")
+        print("="*50)
         
-        # Ultra high resolution setup (maximum Pi Camera v3 capability)
-        self.width = 4608   # 4K+ width
-        self.height = 2592  # 4K+ height  
+        # Optimized resolution for better FPS
+        self.width = 2304   # Good balance: high quality but better FPS
+        self.height = 1296  # 56 FPS capable resolution
         self.total_pixels = self.width * self.height
         self.center_x = self.width // 2
         self.center_y = self.height // 2
         
-        print(f"📹 Ultra HD Camera: {self.width}x{self.height}")
-        print(f"🎯 Total Pixels: {self.total_pixels:,} ({self.total_pixels//1000000:.1f} Megapixels)")
+        print(f"📹 Optimized Resolution: {self.width}x{self.height}")
+        print(f"🎯 Total Pixels: {self.total_pixels:,} ({self.total_pixels//1000000:.1f}MP)")
         print(f"📍 Center Point: ({self.center_x}, {self.center_y})")
         
-        # Initialize ultra high-res camera
-        self.camera = UltraHighResCapture(self.width, self.height)
+        # Initialize optimized camera
+        self.camera = OptimizedCapture(self.width, self.height)
         
-        # Initialize advanced face detector
-        self.detector = AdvancedFaceDetector()
+        # Initialize stable face detector
+        self.detector = StableFaceDetector()
         
         # Initialize servo controller
-        print("🎛️ Starting precision servo controller...")
+        print("🎛️ Starting stable servo controller...")
         logging.basicConfig(level=logging.INFO)
         self.servo_config = ServoConfig()
         self.servo = ServoController(self.servo_config)
         self.servo.start_control_loop()
         
-        # Enhanced tracking parameters for ultra-high resolution
+        # STABLE tracking parameters
         self.tracking_enabled = False
-        self.deadzone = 150  # Larger deadzone for ultra-high res
+        self.deadzone = 80  # Reasonable deadzone
         
-        # Ultra-precise sensitivity (smaller values for high resolution)
-        self.pan_sensitivity = 0.0008   # More precise for ultra-high res
-        self.tilt_sensitivity = 0.0005  # Even more precise for tilt
+        # STABLE sensitivity (prevents unnecessary movement)
+        self.pan_sensitivity = 0.0015   # Balanced sensitivity
+        self.tilt_sensitivity = 0.001   # More stable tilt
         
-        # Enhanced tracking features
-        self.last_target_time = time.time()
-        self.target_lost_timeout = 2.5
-        self.smoothing_factor = 0.3  # Smooth movement for stability
+        # STABILITY features to prevent random movement
         self.last_target_center = None
+        self.target_stability_threshold = 3  # Frames before trusting target
+        self.stable_target_count = 0
+        self.last_servo_move_time = 0
+        self.min_servo_interval = 0.2  # Minimum 200ms between servo moves
+        self.movement_threshold = 10   # Minimum pixel movement to trigger servo
         
         # Performance monitoring
         self.frame_count = 0
         self.start_time = time.time()
-        self.detection_history = []
+        self.servo_move_count = 0
         
-        print("✅ ULTRA TRACKER READY!")
+        print("✅ STABLE TRACKER READY!")
         print(f"🎯 Deadzone: {self.deadzone}px")
-        print(f"🎛️ Pan sensitivity: {self.pan_sensitivity}")
-        print(f"🎛️ Tilt sensitivity: {self.tilt_sensitivity}")
-        print("="*60)
+        print(f"🛑 Movement threshold: {self.movement_threshold}px")
+        print(f"⏱️ Min servo interval: {self.min_servo_interval}s")
+        print("="*50)
     
-    def calculate_precision_movement(self, target_center):
-        """Calculate ultra-precise servo movement for high-resolution tracking"""
+    def should_move_servo(self, target_center):
+        """Determine if servo should move (prevents unnecessary movement)"""
+        if not target_center:
+            return False, None, None
+        
+        current_time = time.time()
+        
+        # Check minimum time between moves
+        if current_time - self.last_servo_move_time < self.min_servo_interval:
+            return False, None, None
+        
         target_x, target_y = target_center
         
-        # Apply smoothing if we have previous target
-        if self.last_target_center and self.smoothing_factor > 0:
-            prev_x, prev_y = self.last_target_center
-            target_x = prev_x + (target_x - prev_x) * (1 - self.smoothing_factor)
-            target_y = prev_y + (target_y - prev_y) * (1 - self.smoothing_factor)
-            target_x, target_y = int(target_x), int(target_y)
+        # Check if target moved significantly from last position
+        if self.last_target_center:
+            last_x, last_y = self.last_target_center
+            movement_distance = np.sqrt((target_x - last_x)**2 + (target_y - last_y)**2)
+            
+            if movement_distance < self.movement_threshold:
+                return False, None, None  # Target hasn't moved enough
         
-        self.last_target_center = (target_x, target_y)
-        
-        # Calculate pixel errors from center
+        # Calculate errors from center
         error_x = target_x - self.center_x
         error_y = self.center_y - target_y
-        
-        # Calculate distance from center
         distance = np.sqrt(error_x**2 + error_y**2)
         
         # Check if within deadzone
         if distance <= self.deadzone:
-            return None  # No movement needed
+            return False, None, None
         
-        # Ultra-precise servo adjustments
+        # Calculate servo adjustments
         pan_adjustment = error_x * self.pan_sensitivity
         tilt_adjustment = error_y * self.tilt_sensitivity
+        
+        # Apply reasonable limits to prevent excessive movement
+        pan_adjustment = max(-0.1, min(0.1, pan_adjustment))
+        tilt_adjustment = max(-0.1, min(0.1, tilt_adjustment))
         
         # Get current positions
         current_pan = self.servo.current_pan
         current_tilt = self.servo.current_tilt
         
-        # Calculate new positions with limits
+        # Calculate new positions
         new_pan = max(-1, min(1, current_pan + pan_adjustment))
         new_tilt = max(-1, min(1, current_tilt + tilt_adjustment))
         
-        print(f"📍 Ultra-HD Target: ({target_x}, {target_y}) | Error: x={error_x:.0f}, y={error_y:.0f} | Dist: {distance:.0f}px")
-        print(f"🎯 Precision Move: Pan {current_pan:.4f} → {new_pan:.4f} | Tilt {current_tilt:.4f} → {new_tilt:.4f}")
+        # Only move if change is significant
+        pan_change = abs(new_pan - current_pan)
+        tilt_change = abs(new_tilt - current_tilt)
         
-        return new_pan, new_tilt
+        if pan_change < 0.005 and tilt_change < 0.005:
+            return False, None, None  # Change too small
+        
+        print(f"📍 Target: ({target_x}, {target_y}) | Error: x={error_x:.0f}, y={error_y:.0f}")
+        print(f"🎯 Servo: Pan {current_pan:.3f}→{new_pan:.3f} | Tilt {current_tilt:.3f}→{new_tilt:.3f}")
+        
+        return True, new_pan, new_tilt
     
-    def draw_ultra_hd_overlay(self, frame, targets):
-        """Draw comprehensive overlay optimized for ultra-high resolution"""
+    def draw_optimized_overlay(self, frame, targets):
+        """Draw optimized overlay for better performance"""
         display = frame.copy()
         h, w = display.shape[:2]
         
-        # Scale UI elements for ultra-high resolution
-        ui_scale = max(1, w // 1920)  # Scale UI based on width
-        font_scale = ui_scale * 0.8
+        # Reasonable UI scaling
+        ui_scale = max(1, w // 2000)
+        font_scale = 0.6 * ui_scale
         thickness = max(1, ui_scale)
         
-        # Draw ultra-precise center crosshair
-        crosshair_size = 120 * ui_scale
-        crosshair_color = (0, 255, 255)  # Bright cyan
+        # Draw center crosshair
+        crosshair_size = 60
+        crosshair_color = (0, 255, 255)
         cv2.line(display, (self.center_x - crosshair_size, self.center_y), 
-                (self.center_x + crosshair_size, self.center_y), crosshair_color, thickness * 2)
+                (self.center_x + crosshair_size, self.center_y), crosshair_color, 3)
         cv2.line(display, (self.center_x, self.center_y - crosshair_size), 
-                (self.center_x, self.center_y + crosshair_size), crosshair_color, thickness * 2)
+                (self.center_x, self.center_y + crosshair_size), crosshair_color, 3)
         
         # Draw center point
-        cv2.circle(display, (self.center_x, self.center_y), 20 * ui_scale, crosshair_color, -1)
+        cv2.circle(display, (self.center_x, self.center_y), 10, crosshair_color, -1)
         
-        # Draw ultra-high res deadzone
-        cv2.circle(display, (self.center_x, self.center_y), self.deadzone, (255, 255, 0), thickness)
-        cv2.putText(display, f"DEADZONE ({self.deadzone}px)", 
-                   (self.center_x - 100 * ui_scale, self.center_y + self.deadzone + 30 * ui_scale), 
-                   cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.7, (255, 255, 0), thickness)
+        # Draw deadzone
+        cv2.circle(display, (self.center_x, self.center_y), self.deadzone, (255, 255, 0), 2)
         
-        # Draw detected faces with ultra-high res details
-        for i, target in enumerate(targets):
+        # Draw faces
+        for i, target in enumerate(targets[:3]):  # Limit to 3 faces for performance
             center = target['center']
             bbox = target['bbox']
             x, y, w, h = bbox
-            face_type = target.get('type', 'unknown')
             area = target['area']
-            confidence = target.get('confidence', 0.5)
             
             # Color coding
             if i == 0:  # Primary target
                 color = (0, 255, 0)
-                thickness_face = thickness * 3
-                label = "PRIMARY TARGET"
-            elif i < 3:
-                color = (0, 255, 255)
-                thickness_face = thickness * 2
-                label = f"FACE {i+1}"
+                thickness_face = 3
+                label = "PRIMARY"
             else:
-                color = (255, 0, 255)
-                thickness_face = thickness
+                color = (0, 255, 255)
+                thickness_face = 2
                 label = f"FACE {i+1}"
             
             # Face bounding box
             cv2.rectangle(display, (x, y), (x + w, y + h), color, thickness_face)
             
-            # Face center point (larger for ultra-high res)
-            cv2.circle(display, center, 25 * ui_scale, color, -1)
+            # Face center
+            cv2.circle(display, center, 8, color, -1)
             
-            # Ultra-detailed face information
-            text_offset = 50 * ui_scale
-            cv2.putText(display, label, (x, y - text_offset), 
+            # Face info
+            cv2.putText(display, label, (x, y - 10), 
                        cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
-            cv2.putText(display, f"{face_type.upper()}", (x, y - text_offset//2), 
-                       cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.8, color, thickness)
-            cv2.putText(display, f"Size: {w}x{h}px ({area:,} px²)", (x, y + h + text_offset//2), 
-                       cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.6, color, max(1, thickness-1))
-            cv2.putText(display, f"Pos: ({center[0]}, {center[1]})", (x, y + h + text_offset), 
-                       cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.6, color, max(1, thickness-1))
-            cv2.putText(display, f"Conf: {confidence:.2f}", (x, y + h + text_offset * 3//2), 
-                       cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.6, color, max(1, thickness-1))
+            cv2.putText(display, f"{w}x{h}", (x, y + h + 20), 
+                       cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.7, color, 1)
             
-            # Draw tracking line for primary target
+            # Tracking line for primary target
             if i == 0 and self.tracking_enabled:
-                cv2.line(display, center, (self.center_x, self.center_y), color, thickness * 2)
+                cv2.line(display, center, (self.center_x, self.center_y), color, 3)
                 
-                # Enhanced tracking status
                 distance = np.sqrt((center[0] - self.center_x)**2 + (center[1] - self.center_y)**2)
-                tracking_status = "CENTERED" if distance <= self.deadzone else "TRACKING"
+                status = "CENTERED" if distance <= self.deadzone else "TRACKING"
                 
-                cv2.putText(display, tracking_status, 
-                           (center[0] + 40 * ui_scale, center[1] - 40 * ui_scale), 
+                cv2.putText(display, status, (center[0] + 30, center[1] - 30), 
                            cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
-                cv2.putText(display, f"Dist: {distance:.0f}px", 
-                           (center[0] + 40 * ui_scale, center[1]), 
-                           cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.8, color, thickness)
         
-        # Ultra-comprehensive status panel
-        self.draw_ultra_status(display, targets, ui_scale, font_scale, thickness)
+        # Compact status panel
+        self.draw_compact_status(display, targets)
         
         return display
     
-    def draw_ultra_status(self, frame, targets, ui_scale, font_scale, thickness):
-        """Draw ultra-detailed status information for high resolution"""
+    def draw_compact_status(self, frame, targets):
+        """Draw compact status panel"""
         h, w = frame.shape[:2]
         
-        # Main status panel (scaled for ultra-high res)
-        panel_width = 600 * ui_scale
-        panel_height = 300 * ui_scale
-        
+        # Compact status panel
         overlay = frame.copy()
-        cv2.rectangle(overlay, (10, 10), (panel_width, panel_height), (0, 0, 0), -1)
-        cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
+        cv2.rectangle(overlay, (10, 10), (400, 120), (0, 0, 0), -1)
+        cv2.addWeighted(overlay, 0.8, frame, 0.2, 0, frame)
         
-        # Ultra tracker title
-        cv2.putText(frame, "🚀 ULTRA TRACKER", (20, 50 * ui_scale), 
-                   cv2.FONT_HERSHEY_SIMPLEX, font_scale * 1.2, (0, 255, 255), thickness * 2)
+        # Title
+        cv2.putText(frame, "🎯 STABLE TRACKER", (20, 35), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
         
-        # Resolution info
-        cv2.putText(frame, f"📹 {self.width}x{self.height} ({self.total_pixels//1000000:.1f}MP)", 
-                   (20, 90 * ui_scale), cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.8, (255, 255, 255), thickness)
-        
-        # Tracking status
+        # Status
         if self.tracking_enabled:
-            status_text = "🔴 ULTRA PRECISION TRACKING"
+            status_text = "🔴 TRACKING ACTIVE"
             status_color = (0, 255, 0)
         else:
-            status_text = "⚪ STANDBY MODE"
+            status_text = "⚪ STANDBY"
             status_color = (128, 128, 128)
         
-        cv2.putText(frame, status_text, (20, 130 * ui_scale), 
-                   cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.9, status_color, thickness)
-        
-        # Ultra-detailed detection info
-        cv2.putText(frame, f"👥 Ultra-HD Faces: {len(targets)}", (20, 170 * ui_scale), 
-                   cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.8, (255, 255, 255), thickness)
+        cv2.putText(frame, status_text, (20, 60), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, status_color, 2)
         
         # Performance info
         elapsed = time.time() - self.start_time
         fps = self.frame_count / elapsed if elapsed > 0 else 0
-        cv2.putText(frame, f"⚡ FPS: {fps:.2f} | Frame: {self.frame_count}", (20, 210 * ui_scale), 
-                   cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.7, (255, 255, 255), thickness)
+        cv2.putText(frame, f"FPS: {fps:.1f} | Faces: {len(targets)} | Moves: {self.servo_move_count}", 
+                   (20, 85), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         
-        # Servo status
-        pan_deg, tilt_deg = self.servo.get_position_degrees()
-        servo_status = "MOVING" if self.servo.is_moving else "IDLE"
-        cv2.putText(frame, f"🎛️ Servos ({servo_status}): Pan {pan_deg:.1f}° | Tilt {tilt_deg:.1f}°", 
-                   (20, 250 * ui_scale), cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.7, (255, 255, 255), thickness)
-        
-        # Ultra controls
-        cv2.putText(frame, "⌨️ T=Track | C=Center | Q=Quit | ESC=Stop", (20, 290 * ui_scale), 
-                   cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.6, (255, 255, 0), max(1, thickness-1))
+        # Controls
+        cv2.putText(frame, "T=Track | C=Center | Q=Quit", (20, 105), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 0), 1)
     
     def run(self):
-        """Main ultra-high resolution tracking loop"""
-        print("\n" + "="*80)
-        print("🚀 ULTRA TRACKER - MAXIMUM RESOLUTION EDITION")
-        print("="*80)
-        print(f"📹 Ultra HD: {self.width}x{self.height} ({self.total_pixels//1000000:.1f} Megapixels)")
-        print("🎯 Maximum camera resolution with precision tracking")
-        print("🎛️ Ultra-precise servo control with smoothing")
+        """Main optimized tracking loop"""
+        print("\n" + "="*60)
+        print("🚀 STABLE TRACKER - OPTIMIZED PERFORMANCE")
+        print("="*60)
+        print(f"📹 Resolution: {self.width}x{self.height} (optimized for FPS)")
+        print("🎯 Stable servo control with movement filtering")
+        print("🚀 Enhanced FPS with balanced quality")
         print("")
-        print("🎮 ULTRA CONTROLS:")
-        print("   T - Toggle ultra-precision tracking ON/OFF")
-        print("   C - Center servos manually")
+        print("🎮 CONTROLS:")
+        print("   T - Toggle tracking ON/OFF")
+        print("   C - Center servos")
         print("   Q - Quit")
-        print("   ESC - Emergency stop")
         print("")
-        print("▶️ Experience face tracking at maximum resolution!")
-        print("-"*80)
+        print("▶️ Optimized for smooth, stable performance!")
+        print("-"*60)
         
         # Center servos
-        print("🎯 Centering servos for ultra-precision...")
+        print("🎯 Centering servos...")
         self.servo.move_to_center()
-        time.sleep(2)
+        time.sleep(1.5)
         
         try:
             while True:
-                # Capture ultra-high resolution frame
+                # Capture frame
                 ret, frame = self.camera.read()
                 if not ret:
-                    print("❌ Ultra-HD capture failed - retrying...")
-                    time.sleep(0.1)
+                    print("❌ Capture failed - retrying...")
+                    time.sleep(0.05)
                     continue
                 
                 self.frame_count += 1
                 
-                # Ultra-high resolution face detection
+                # Detect faces
                 targets = self.detector.detect_faces(frame)
                 
-                # Ultra-precision tracking
+                # Stable tracking with movement filtering
                 if self.tracking_enabled and targets:
                     primary_target = targets[0]
-                    servo_movement = self.calculate_precision_movement(primary_target['center'])
                     
-                    if servo_movement:
-                        new_pan, new_tilt = servo_movement
+                    # Check if we should move servo
+                    should_move, new_pan, new_tilt = self.should_move_servo(primary_target['center'])
+                    
+                    if should_move:
                         self.servo.set_position(new_pan, new_tilt)
-                        print("🎯 ULTRA-PRECISION SERVO MOVEMENT")
-                    else:
-                        if self.frame_count % 30 == 0:
-                            print("✅ ULTRA TARGET CENTERED - ultra-precise!")
-                    
-                    self.last_target_time = time.time()
+                        self.last_servo_move_time = time.time()
+                        self.servo_move_count += 1
+                        self.last_target_center = primary_target['center']
+                        print("🎯 STABLE SERVO MOVE")
                     
                 elif self.tracking_enabled and not targets:
-                    if time.time() - self.last_target_time > self.target_lost_timeout:
-                        print("🔍 NO ULTRA TARGETS - returning to center")
-                        self.servo.move_to_center()
-                        self.last_target_time = time.time()
-                        self.last_target_center = None
+                    # Reset tracking state when no targets
+                    self.last_target_center = None
+                    self.stable_target_count = 0
                 
-                # Create ultra-high resolution display
-                display_frame = self.draw_ultra_hd_overlay(frame, targets)
+                # Create display
+                display_frame = self.draw_optimized_overlay(frame, targets)
                 
-                # Show ultra-high resolution video (OpenCV will scale for display)
-                cv2.imshow("Ultra Tracker - Maximum Resolution", display_frame)
+                # Show video
+                cv2.imshow("Stable Tracker - Optimized Performance", display_frame)
                 
                 # Handle controls
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q') or key == 27:
-                    print("\n⏹️ ULTRA QUIT COMMAND")
+                    print("\n⏹️ QUIT")
                     break
                 elif key == ord('t') or key == ord('T'):
                     self.tracking_enabled = not self.tracking_enabled
-                    status = "ENABLED ✅" if self.tracking_enabled else "DISABLED ❌"
-                    print(f"\n🎯 ULTRA-PRECISION TRACKING {status}")
+                    status = "ENABLED" if self.tracking_enabled else "DISABLED"
+                    print(f"\n🎯 TRACKING {status}")
+                    # Reset tracking state
+                    self.last_target_center = None
+                    self.stable_target_count = 0
                 elif key == ord('c') or key == ord('C'):
-                    print("\n🎯 ULTRA-PRECISION CENTER")
+                    print("\n🎯 CENTERING")
                     self.servo.move_to_center()
                     self.last_target_center = None
+                    self.last_servo_move_time = time.time()
                 
-                # Ultra progress report
-                if self.frame_count % 60 == 0:  # Every 60 frames
+                # Performance report every 120 frames
+                if self.frame_count % 120 == 0:
                     elapsed = time.time() - self.start_time
                     fps = self.frame_count / elapsed if elapsed > 0 else 0
-                    pan_deg, tilt_deg = self.servo.get_position_degrees()
-                    megapixels_processed = (self.frame_count * self.total_pixels) / 1000000
-                    print(f"📊 Ultra Frame {self.frame_count} | FPS: {fps:.2f} | Faces: {len(targets)} | "
-                          f"MP Processed: {megapixels_processed:.0f} | Servos: Pan {pan_deg:.1f}° Tilt {tilt_deg:.1f}°")
-                
-                # Small delay for stability
-                time.sleep(0.02)
+                    print(f"📊 Frame {self.frame_count} | FPS: {fps:.1f} | Faces: {len(targets)} | Servo moves: {self.servo_move_count}")
                 
         except KeyboardInterrupt:
-            print("\n⏹️ ULTRA INTERRUPTED")
+            print("\n⏹️ INTERRUPTED")
         
         finally:
-            print("\n🛑 ULTRA SHUTDOWN...")
+            print("\n🛑 SHUTDOWN...")
             
             if self.tracking_enabled:
                 self.tracking_enabled = False
             
-            print("🎯 Ultra-centering servos...")
+            print("🎯 Centering servos...")
             self.servo.move_to_center()
-            time.sleep(2)
+            time.sleep(1.5)
             
-            print("🧹 Ultra cleanup...")
+            print("🧹 Cleanup...")
             self.servo.cleanup()
             self.camera.release()
             cv2.destroyAllWindows()
             
-            # Ultra final report
+            # Final report
             elapsed = time.time() - self.start_time
             if elapsed > 0:
                 fps = self.frame_count / elapsed
-                megapixels_processed = (self.frame_count * self.total_pixels) / 1000000
-                print(f"\n📊 ULTRA SESSION COMPLETE:")
+                moves_per_minute = (self.servo_move_count / elapsed) * 60
+                print(f"\n📊 SESSION COMPLETE:")
                 print(f"   Duration: {elapsed:.1f}s")
-                print(f"   Ultra Frames: {self.frame_count}")
-                print(f"   Ultra FPS: {fps:.2f}")
-                print(f"   Megapixels Processed: {megapixels_processed:.0f}")
-                print(f"   Total Pixel Operations: {self.frame_count * self.total_pixels:,}")
+                print(f"   Frames: {self.frame_count}")
+                print(f"   Average FPS: {fps:.1f}")
+                print(f"   Servo moves: {self.servo_move_count}")
+                print(f"   Moves per minute: {moves_per_minute:.1f}")
             
-            print("\n✅ ULTRA TRACKER COMPLETE!")
-            print("🚀 Maximum resolution face tracking achieved!")
+            print("\n✅ STABLE TRACKER COMPLETE!")
 
 def main():
-    print("🚀 Initializing Ultra Tracker - Maximum Resolution...")
-    tracker = UltraTracker()
+    print("🚀 Initializing Stable Tracker...")
+    tracker = StableTracker()
     tracker.run()
 
 if __name__ == "__main__":
