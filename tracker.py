@@ -202,39 +202,88 @@ class StableTracker:
         self.pan_sensitivity = 0.0015   # Balanced sensitivity
         self.tilt_sensitivity = 0.001   # More stable tilt
         
-        # STABILITY features to prevent random movement
+        # ULTRA-STRICT stability features to prevent ANY unnecessary movement
         self.last_target_center = None
-        self.target_stability_threshold = 3  # Frames before trusting target
+        self.target_stability_threshold = 8  # Must see target for 8 frames before trusting
         self.stable_target_count = 0
+        self.consistent_targets = []  # Track recent target positions
         self.last_servo_move_time = 0
-        self.min_servo_interval = 0.2  # Minimum 200ms between servo moves
-        self.movement_threshold = 10   # Minimum pixel movement to trigger servo
+        self.min_servo_interval = 0.5  # Minimum 500ms between servo moves (stricter)
+        self.movement_threshold = 25   # Much larger minimum pixel movement (stricter)
+        self.servo_enabled = True  # Master servo enable/disable
         
         # Performance monitoring
         self.frame_count = 0
         self.start_time = time.time()
         self.servo_move_count = 0
         
-        print("✅ STABLE TRACKER READY!")
+        print("✅ ULTRA-STABLE TRACKER READY!")
         print(f"🎯 Deadzone: {self.deadzone}px")
         print(f"🛑 Movement threshold: {self.movement_threshold}px")
         print(f"⏱️ Min servo interval: {self.min_servo_interval}s")
+        print(f"🔒 Target stability frames: {self.target_stability_threshold}")
+        print(f"🎛️ Servo enabled: {self.servo_enabled}")
         print("="*50)
     
+    def validate_target_stability(self, target_center):
+        """Ultra-strict target validation to prevent false positives"""
+        if not target_center:
+            self.stable_target_count = 0
+            self.consistent_targets.clear()
+            return False
+        
+        target_x, target_y = target_center
+        
+        # Add current target to recent history
+        self.consistent_targets.append((target_x, target_y))
+        
+        # Keep only recent targets (last 10 frames)
+        if len(self.consistent_targets) > 10:
+            self.consistent_targets.pop(0)
+        
+        # Need minimum number of consistent targets
+        if len(self.consistent_targets) < self.target_stability_threshold:
+            return False
+        
+        # Check if recent targets are consistent (not jumping around)
+        recent_targets = self.consistent_targets[-self.target_stability_threshold:]
+        
+        # Calculate variance in target positions
+        x_positions = [t[0] for t in recent_targets]
+        y_positions = [t[1] for t in recent_targets]
+        
+        x_variance = np.var(x_positions)
+        y_variance = np.var(y_positions)
+        
+        # If targets are jumping around too much, don't trust them
+        if x_variance > 100 or y_variance > 100:  # Variance threshold
+            print(f"🚫 Target unstable: x_var={x_variance:.1f}, y_var={y_variance:.1f}")
+            return False
+        
+        return True
+
     def should_move_servo(self, target_center):
-        """Determine if servo should move (prevents unnecessary movement)"""
+        """ULTRA-STRICT servo movement decision with multiple safety checks"""
+        # Master servo disable check
+        if not self.servo_enabled:
+            return False, None, None
+            
         if not target_center:
             return False, None, None
         
         current_time = time.time()
         
-        # Check minimum time between moves
+        # STRICT: Check minimum time between moves (increased to 500ms)
         if current_time - self.last_servo_move_time < self.min_servo_interval:
             return False, None, None
         
         target_x, target_y = target_center
         
-        # Check if target moved significantly from last position
+        # STRICT: Target must be stable for multiple frames
+        if not self.validate_target_stability(target_center):
+            return False, None, None
+        
+        # STRICT: Check if target moved significantly from last position (increased threshold)
         if self.last_target_center:
             last_x, last_y = self.last_target_center
             movement_distance = np.sqrt((target_x - last_x)**2 + (target_y - last_y)**2)
@@ -247,17 +296,22 @@ class StableTracker:
         error_y = self.center_y - target_y
         distance = np.sqrt(error_x**2 + error_y**2)
         
-        # Check if within deadzone
+        # STRICT: Check if within deadzone
         if distance <= self.deadzone:
             return False, None, None
         
-        # Calculate servo adjustments
+        # STRICT: Only move if error is significant (must be well outside deadzone)
+        if distance < self.deadzone * 1.5:  # Must be 50% beyond deadzone
+            return False, None, None
+        
+        # Calculate servo adjustments with VERY conservative limits
         pan_adjustment = error_x * self.pan_sensitivity
         tilt_adjustment = error_y * self.tilt_sensitivity
         
-        # Apply reasonable limits to prevent excessive movement
-        pan_adjustment = max(-0.1, min(0.1, pan_adjustment))
-        tilt_adjustment = max(-0.1, min(0.1, tilt_adjustment))
+        # STRICT: Apply very conservative limits
+        max_adjustment = 0.05  # Even smaller max adjustment
+        pan_adjustment = max(-max_adjustment, min(max_adjustment, pan_adjustment))
+        tilt_adjustment = max(-max_adjustment, min(max_adjustment, tilt_adjustment))
         
         # Get current positions
         current_pan = self.servo.current_pan
@@ -267,15 +321,21 @@ class StableTracker:
         new_pan = max(-1, min(1, current_pan + pan_adjustment))
         new_tilt = max(-1, min(1, current_tilt + tilt_adjustment))
         
-        # Only move if change is significant
+        # STRICT: Only move if change is very significant
         pan_change = abs(new_pan - current_pan)
         tilt_change = abs(new_tilt - current_tilt)
         
-        if pan_change < 0.005 and tilt_change < 0.005:
+        min_change = 0.01  # Increased minimum change threshold
+        if pan_change < min_change and tilt_change < min_change:
             return False, None, None  # Change too small
         
-        print(f"📍 Target: ({target_x}, {target_y}) | Error: x={error_x:.0f}, y={error_y:.0f}")
-        print(f"🎯 Servo: Pan {current_pan:.3f}→{new_pan:.3f} | Tilt {current_tilt:.3f}→{new_tilt:.3f}")
+        # DEBUGGING: Show why we're moving
+        print(f"🔍 SERVO MOVE DEBUG:")
+        print(f"   Target: ({target_x}, {target_y}) | Distance from center: {distance:.0f}px")
+        print(f"   Error: x={error_x:.0f}px, y={error_y:.0f}px")
+        print(f"   Movement since last: {movement_distance:.0f}px (threshold: {self.movement_threshold})")
+        print(f"   Servo: Pan {current_pan:.3f}→{new_pan:.3f} | Tilt {current_tilt:.3f}→{new_tilt:.3f}")
+        print(f"   Time since last move: {current_time - self.last_servo_move_time:.2f}s")
         
         return True, new_pan, new_tilt
     
@@ -374,11 +434,12 @@ class StableTracker:
         # Performance info
         elapsed = time.time() - self.start_time
         fps = self.frame_count / elapsed if elapsed > 0 else 0
-        cv2.putText(frame, f"FPS: {fps:.1f} | Faces: {len(targets)} | Moves: {self.servo_move_count}", 
+        servo_status = "ON" if self.servo_enabled else "OFF"
+        cv2.putText(frame, f"FPS: {fps:.1f} | Faces: {len(targets)} | Moves: {self.servo_move_count} | Servo: {servo_status}", 
                    (20, 85), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         
         # Controls
-        cv2.putText(frame, "T=Track | C=Center | Q=Quit", (20, 105), 
+        cv2.putText(frame, "T=Track | S=Servo On/Off | C=Center | Q=Quit", (20, 105), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 0), 1)
     
     def run(self):
@@ -390,8 +451,9 @@ class StableTracker:
         print("🎯 Stable servo control with movement filtering")
         print("🚀 Enhanced FPS with balanced quality")
         print("")
-        print("🎮 CONTROLS:")
+        print("🎮 ULTRA-STRICT CONTROLS:")
         print("   T - Toggle tracking ON/OFF")
+        print("   S - Toggle servo movement ON/OFF (master disable)")
         print("   C - Center servos")
         print("   Q - Quit")
         print("")
@@ -454,11 +516,20 @@ class StableTracker:
                     # Reset tracking state
                     self.last_target_center = None
                     self.stable_target_count = 0
+                    self.consistent_targets.clear()
+                elif key == ord('s') or key == ord('S'):
+                    self.servo_enabled = not self.servo_enabled
+                    status = "ENABLED" if self.servo_enabled else "DISABLED"
+                    print(f"\n🎛️ SERVO MOVEMENT {status}")
+                    # Reset tracking state when changing servo mode
+                    self.last_target_center = None
+                    self.consistent_targets.clear()
                 elif key == ord('c') or key == ord('C'):
                     print("\n🎯 CENTERING")
                     self.servo.move_to_center()
                     self.last_target_center = None
                     self.last_servo_move_time = time.time()
+                    self.consistent_targets.clear()
                 
                 # Performance report every 120 frames
                 if self.frame_count % 120 == 0:
