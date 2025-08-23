@@ -1,0 +1,48 @@
+[Unit]
+Description=Automated Water Gun System
+Documentation=https://github.com/your-username/water-gun-system
+After=network.target sound.target
+Wants=network-online.target
+Requires=pigpiod.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/opt/water-gun-system
+Environment=PYTHONPATH=/opt/water-gun-system
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/python3 /opt/water-gun-system/web_interface.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStopSec=30
+Restart=always
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/water-gun-system
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=512M
+CPUQuota=80%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=water-gun-system
+
+[Install]
+WantedBy=multi-user.target

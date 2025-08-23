@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(sudo systemctl status:*)",
+      "Bash(sudo systemctl start:*)",
+      "Bash(cat:*)",
+      "Bash(vcgencmd:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(v4l2-ctl:*)",
+      "Bash(pip install:*)",
+      "Bash(libcamera-hello:*)",
+      "Bash(libcamera-still:*)",
+      "Bash(lsof:*)",
+      "Bash(systemctl:*)",
+      "Bash(sudo fuser:*)",
+      "Bash(rpicam-still:*)",
+      "Bash(source:*)",
+      "Bash(sudo killall:*)",
+      "Bash(sudo pigpiod:*)",
+      "Bash(sudo systemctl stop:*)",
+      "Bash(pkill:*)",
+      "Bash(sudo:*)",
+      "Bash(rm:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/dev",
+      "/tmp",
+      "/home/yossi"
+    ]
+  }
+}

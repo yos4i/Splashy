@@ -1,0 +1,28 @@
+# Water Gun System Requirements
+# Core system dependencies for Raspberry Pi 5
+
+# Computer Vision
+opencv-python==4.8.1.78
+numpy==1.24.3
+
+# GPIO Control (Raspberry Pi specific)
+gpiozero==1.6.2
+pigpio==1.78
+
+# Web Interface
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+python-socketio==5.8.0
+eventlet==0.33.3
+
+# Additional utilities
+Pillow==10.0.1
+python-dateutil==2.8.2
+
+# Optional: Advanced detection models (uncomment if needed)
+# tensorflow-lite-runtime==2.13.0
+# tflite-runtime==2.13.0
+
+# Development and testing
+pytest==7.4.2
+pytest-cov==4.1.0
