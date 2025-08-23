@@ -1,6 +1,6 @@
-# 🎯 Automated Water Gun System for Raspberry Pi 5
+# 💦 Splashy - Smart Water Gun Turret System
 
-A comprehensive automated water gun turret system with computer vision tracking, web-based remote control, and precise servo-driven aiming for Raspberry Pi 5 running Debian.
+Splashy is a comprehensive automated water gun turret system with computer vision tracking, web-based remote control, and precise servo-driven aiming for Raspberry Pi 5 running Debian.
 
 ## 🌟 Features
 
@@ -42,9 +42,9 @@ A comprehensive automated water gun turret system with computer vision tracking,
 ## 📁 Project Structure
 
 ```
-water_gun_system/
+splashy/
 ├── core/                    # Core system files
-│   ├── water_gun_system.py  # Main system controller
+│   ├── splashy_system.py    # Main system controller
 │   ├── servo_controller.py  # Servo control logic
 │   ├── device_controller.py # Pump, IR, PIR control
 │   └── emergency_stop.py    # Safety systems
@@ -61,7 +61,7 @@ water_gun_system/
 │   └── index.html          # Web dashboard
 ├── requirements.txt         # Python dependencies
 ├── install.sh              # Installation script
-├── water_gun_system.service # Systemd service
+├── splashy.service          # Systemd service
 └── venv/                   # Python virtual environment
 ```
 
@@ -80,7 +80,7 @@ sudo apt install python3-pip python3-venv libcamera-apps -y
 
 1. **Navigate to project directory**:
    ```bash
-   cd /home/yossi/Downloads/water_gun_system
+   cd /home/yossi/Downloads/splashy
    ```
 
 2. **Setup Python virtual environment**:
@@ -139,8 +139,8 @@ python3 web/web_interface.py
 
 ### Main System
 ```bash
-# Run main water gun system
-python3 core/water_gun_system.py
+# Run main splashy system
+python3 core/splashy_system.py
 ```
 
 ## 📹 Camera Configuration
@@ -183,7 +183,7 @@ libcamera-still --output test.jpg --timeout 1000
 - **Autofocus**: Hardware autofocus supported on Pi Camera v3
 
 ### System Configuration
-The main configuration is in `core/water_gun_system.py`:
+The main configuration is in `core/splashy_system.py`:
 ```python
 # Default camera configuration
 frame_width: int = 1280    # HD resolution
@@ -222,7 +222,7 @@ python3 core/servo_controller.py
 python3 core/device_controller.py
 
 # Full system test
-python3 core/water_gun_system.py
+python3 core/splashy_system.py
 ```
 
 ## 🛠️ Troubleshooting

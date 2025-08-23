@@ -1,6 +1,6 @@
 [Unit]
-Description=Automated Water Gun System
-Documentation=https://github.com/your-username/water-gun-system
+Description=Splashy - Smart Water Gun Turret System
+Documentation=https://github.com/yos4i/splashy
 After=network.target sound.target
 Wants=network-online.target
 Requires=pigpiod.service
@@ -9,10 +9,10 @@ Requires=pigpiod.service
 Type=simple
 User=pi
 Group=pi
-WorkingDirectory=/opt/water-gun-system
-Environment=PYTHONPATH=/opt/water-gun-system
+WorkingDirectory=/opt/splashy
+Environment=PYTHONPATH=/opt/splashy
 ExecStartPre=/bin/sleep 10
-ExecStart=/usr/bin/python3 /opt/water-gun-system/web_interface.py
+ExecStart=/usr/bin/python3 /opt/splashy/core/splashy_system.py
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
 KillSignal=SIGINT
@@ -27,7 +27,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/water-gun-system
+ReadWritePaths=/opt/splashy
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
@@ -42,7 +42,7 @@ CPUQuota=80%
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=water-gun-system
+SyslogIdentifier=splashy
 
 [Install]
 WantedBy=multi-user.target
