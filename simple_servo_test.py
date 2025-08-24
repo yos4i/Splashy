@@ -24,9 +24,9 @@ class DirectServoTest:
         print("="*40)
         print("Direct servo control - no threading, no queues")
         
-        # Servo configuration
-        self.pan_pin = 18    # GPIO18
-        self.tilt_pin = 23   # GPIO23
+        # Servo configuration - MATCH YOUR SERVO CONTROLLER EXACTLY
+        self.pan_pin = 18    # GPIO18 - Physical pin 12 (matches ServoConfig)
+        self.tilt_pin = 23   # GPIO23 - Physical pin 16 (matches ServoConfig)
         
         self.pan_servo = None
         self.tilt_servo = None
